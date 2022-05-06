@@ -1,6 +1,22 @@
 local PriorityQueue = {}
 
-local Node = require(script.Parent.Node)
+local Node = {}
+
+Node.__index = Node
+
+function Node.new(value, priority)
+    local self = {}
+    setmetatable(self, Node)
+
+    self.Value = value
+    self.Priority = priority
+
+    self.Parent = nil
+    self.Left = nil
+    self.Right = nil
+
+    return self
+end
 
 PriorityQueue.__index = PriorityQueue
 
@@ -46,7 +62,7 @@ function PriorityQueue:Enqueue(value, priority)
     else
         RecursiveInsert(self.Root, value, priority)
     end
-    self.Count += 1
+    self.Count = self.Count + 1
 end
 
 -- Recursively searches the tree for the lowest priority node
@@ -77,7 +93,7 @@ end
 function PriorityQueue:Dequeue()
     if self.Count <= 0 then return end
 
-    self.Count -= 1
+    self.Count = self.Count - 1
     local myNode = self:RecursiveRemove(self.Root)
     if myNode.Parent == nil then
         self.Root = myNode.Right
@@ -87,12 +103,19 @@ function PriorityQueue:Dequeue()
 end
 
 -- Checks the lowest priority value in the queue without removing it
--- @return          Any         The value of the lowest priority node
--- @return          Any         The priority of that node
-function PriorityQueue:Peek()
-    local myNode
-
-    return myNode.Value, myNode.Priority
+-- @param           workingNode            Node            Starting node to traverse. Optional. Defaults to self.Root
+-- @param           workingPriority            Any            Minimum priority check. Optional. Defaults to workingNode.Priority
+-- @return          Node         The lowest-priority node.
+function PriorityQueue:Peek(workingNode, workingPriority)
+    workingNode = workingNode or self.Root;
+    workingPriority = workingPriority or (workingNode and workingNode.Priority);
+    if(workingNode.Priority < workingPriority) then
+        workingPriority = workingNode.Priority;
+    end
+    if(workingNode.Left ~= nil) then
+      workingNode = PriorityQueue:Peek(workingNode.Left, workingPriority);
+    end
+    return workingNode;
 end
 
 -- Recursively builds a string to display the queue in order of priorty from least to greatest
@@ -115,5 +138,3 @@ function PriorityQueue.__tostring(pq)
     str = str..RecursivePrint(pq.Root)
     return str
 end
-
-return PriorityQueue
